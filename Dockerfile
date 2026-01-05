@@ -5,7 +5,7 @@ RUN a2enmod rewrite
 
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Install system dependencies
+# Install system dependencies thei si 
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
