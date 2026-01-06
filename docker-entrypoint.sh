@@ -3,22 +3,19 @@ set -e
 
 cd /var/www/html
 
-# Create .env if missing
-if [ ! -f .env ]; then
-  cp .env.example .env
-fi
+# Create required directories if missing
+mkdir -p storage/logs bootstrap/cache
 
-# Ensure APP_KEY exists (from Azure env)
-if [ -z "$APP_KEY" ]; then
-  echo "ERROR: APP_KEY not set"
-  exit 1
-fi
-
-# Fix permissions
+# Fix ownership and permissions (Azure-safe)
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
-# Clear caches (DO NOT CACHE)
+# Create log file explicitly
+touch storage/logs/laravel.log
+chown www-data:www-data storage/logs/laravel.log
+chmod 664 storage/logs/laravel.log
+
+# Clear Laravel caches
 php artisan config:clear || true
 php artisan cache:clear || true
 php artisan route:clear || true
