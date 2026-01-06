@@ -22,3 +22,5 @@ php artisan route:clear || true
 php artisan view:clear || true
 
 exec apache2-foreground
+
+
