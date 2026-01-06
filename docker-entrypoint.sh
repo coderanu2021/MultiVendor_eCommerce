@@ -10,7 +10,7 @@ if [ ! -f .env ]; then
   cp .env.example .env
 fi
 
-# Ensure correct permissions
+# Ensure correct permissions   env file
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
