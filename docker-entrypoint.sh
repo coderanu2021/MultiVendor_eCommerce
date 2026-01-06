@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh  d
 
 # permissions
 chown -R www-data:www-data storage bootstrap/cache
