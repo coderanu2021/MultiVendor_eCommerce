@@ -24,8 +24,10 @@ RUN mkdir -p /etc/ssl/mysql \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Set Apache document root correctly
+RUN sed -ri "s!/var/www/html!/var/www/html/public!g" /etc/apache2/sites-available/*.conf
+RUN sed -ri "s!/var/www/!/var/www/html/public/!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
 
 WORKDIR /var/www/html
 COPY . .
