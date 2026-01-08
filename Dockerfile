@@ -1,18 +1,20 @@
 FROM php:8.2-apache-bullseye
 
-RUN a2enmod rewrite
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+# Enable Apache modules
+RUN a2enmod rewrite headers
 
-# Install system deps + SSL + MySQL client libs
+# Set Apache document root
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+# Use double quotes for sed so the env variable expands
+RUN sed -ri "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf
+RUN sed -ri "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Allow .htaccess to work
+RUN echo "AllowOverride All" >> /etc/apache2/apache2.conf
+
+# Install PHP extensions
 RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    wget \
-    git \
-    unzip \
-    zip \
-    libzip-dev \
-    default-mysql-client \
-    libssl-dev \
+    ca-certificates wget git unzip zip libzip-dev default-mysql-client libssl-dev \
     && docker-php-ext-install pdo pdo_mysql zip
 
 # Azure MySQL CA cert
@@ -23,22 +25,19 @@ RUN mkdir -p /etc/ssl/mysql \
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-# Set Apache document root correctly
-RUN sed -ri "s!/var/www/html!/var/www/html/public!g" /etc/apache2/sites-available/*.conf
-RUN sed -ri "s!/var/www/!/var/www/html/public/!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-
+# Copy Laravel app
 WORKDIR /var/www/html
 COPY . .
 
+# Composer install
 RUN composer install --no-dev --optimize-autoloader
 
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
+# Expose port 80
 EXPOSE 80
-ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Start Apache in foreground
+CMD ["apache2-foreground"]
